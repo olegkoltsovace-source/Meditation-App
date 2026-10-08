@@ -1,0 +1,265 @@
+/* ── Colours ──────────────────────────────────────────────────
+   Day: the original app's airy lagoon. Night: the same lagoon after sunset.
+   The 3D scene reads the --bubble-*, --core-*, --glow and --ripple colours too. */
+:root {
+  --sky-center: #ffffff;
+  --sky-middle: #c9f4fd;
+  --sky-edge: #36d2f2;
+  --ink: #0d4a63; /* text */
+  --ink-soft: #3a7891; /* secondary text */
+  --button-face: rgba(255, 255, 255, 0.82);
+  --button-icon: #1f86bd;
+  --chip-face: rgba(255, 255, 255, 0.55);
+  --chip-active: #1f86bd;
+  --chip-active-text: #ffffff;
+  --bubble-body: #2b9fd2;
+  --bubble-rim: #f2fdff;
+  --core-body: #1f8fd0;
+  --glow: #22a7f0;
+  --ripple: #ffffff;
+  --dust: #ffffff;
+
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Karla", "Segoe UI", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sky-center: #1d5677;
+    --sky-middle: #0f3049;
+    --sky-edge: #06131f;
+    --ink: #dff6ff;
+    --ink-soft: #8fc3d8;
+    --button-face: rgba(12, 40, 60, 0.78);
+    --button-icon: #9be6ff;
+    --chip-face: rgba(12, 40, 60, 0.6);
+    --chip-active: #59cdf3;
+    --chip-active-text: #06131f;
+    --bubble-body: #2f9fd4;
+    --bubble-rim: #c4f2ff;
+    --core-body: #2a8fc9;
+    --glow: #3fc3f5;
+    --ripple: #bdefff;
+    --dust: #9fe4ff;
+    color-scheme: dark;
+  }
+}
+
+/* ── Page ── */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 50%, var(--sky-center) 0%, var(--sky-middle) 32%, var(--sky-edge) 100%);
+}
+
+/* The 3D scene: a transparent canvas over the CSS sky. It takes the drag-to-rotate gestures. */
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+#scene:active {
+  cursor: grabbing;
+}
+
+/* Everything on top of the scene. pointer-events: none lets drags reach the canvas;
+   the buttons switch it back on for themselves. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+  padding-inline: 16px;
+  pointer-events: none;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.app-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.session-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+.center {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+/* ── prev / play / next, inside the 3D core ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.control {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--button-face);
+  color: var(--button-icon);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 60, 90, 0.18);
+  transition: transform 0.2s ease;
+}
+
+.control:hover {
+  transform: scale(1.08);
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.control svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.control.play {
+  width: 58px;
+  height: 58px;
+}
+
+.control.play svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ── "Breathe in", the countdown and the soundscape, below the core ── */
+.breath-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + var(--core-radius-px, 110px) + 22px);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.breath-word {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.6rem, 4.2vmin, 2.4rem);
+  line-height: 1.1;
+  transition: opacity 0.4s ease;
+}
+
+.breath-word.changing {
+  opacity: 0;
+}
+
+.breath-detail {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Breathing pattern picker ── */
+.bottom-bar {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.patterns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.pattern {
+  display: grid;
+  gap: 1px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--chip-face);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pattern small {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pattern[aria-checked="true"] {
+  background: var(--chip-active);
+  color: var(--chip-active-text);
+}
+
+.pattern[aria-checked="true"] small {
+  color: var(--chip-active-text);
+}
+
+.pattern:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.webgl-missing {
+  position: fixed;
+  inset: auto 16px 50% 16px;
+  text-align: center;
+}
+
+/* Short screens (phones held sideways): keep the guide compact */
+@media (max-height: 480px) {
+  .breath-word {
+    font-size: 1.3rem;
+  }
+  .pattern {
+    padding: 5px 10px;
+  }
+  .hint {
+    display: none;
+  }
+}
