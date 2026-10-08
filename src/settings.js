@@ -1,36 +1,17 @@
 // All the numbers you might want to tweak, in one place.
 
-// Each pattern is a list of steps:
+// The breathing rhythm: a list of steps, repeated.
 //   "inhale" – lungs fill, bubbles fly out
 //   "hold"   – lungs stay full
 //   "exhale" – lungs empty, bubbles come home
 //   "rest"   – lungs stay empty
-export const BREATHING_PATTERNS = [
-  {
-    name: "Calm", // the original app's rhythm
-    steps: [
-      { phase: "inhale", seconds: 4 },
-      { phase: "exhale", seconds: 4 },
-    ],
-  },
-  {
-    name: "Box",
-    steps: [
-      { phase: "inhale", seconds: 4 },
-      { phase: "hold", seconds: 4 },
-      { phase: "exhale", seconds: 4 },
-      { phase: "rest", seconds: 4 },
-    ],
-  },
-  {
-    name: "4-7-8",
-    steps: [
-      { phase: "inhale", seconds: 4 },
-      { phase: "hold", seconds: 7 },
-      { phase: "exhale", seconds: 8 },
-    ],
-  },
-];
+// 4 seconds in, 4 seconds out: the original app's rhythm.
+export const BREATHING_PATTERN = {
+  steps: [
+    { phase: "inhale", seconds: 4 },
+    { phase: "exhale", seconds: 4 },
+  ],
+};
 
 export const PHASE_WORDS = {
   inhale: "Breathe in",
@@ -39,13 +20,9 @@ export const PHASE_WORDS = {
   rest: "Rest",
 };
 
-// Soundscapes: soft chords made in the browser (no audio files needed).
-// The numbers are note frequencies in Hz.
-export const SOUNDSCAPES = [
-  { name: "Lagoon", notes: [110.0, 164.81, 220.0, 277.18, 329.63] }, // A major, open
-  { name: "Drift", notes: [73.42, 110.0, 146.83, 174.61, 220.0] }, // D minor, warm
-  { name: "Deep", notes: [55.0, 82.41, 110.0, 130.81, 164.81] }, // low A minor drone
-];
+// The soundscape: a soft chord made in the browser (no audio files needed).
+// The numbers are note frequencies in Hz (an open A major chord).
+export const SOUNDSCAPE_NOTES = [110.0, 164.81, 220.0, 277.18, 329.63];
 export const SOUND_VOLUME = 0.16; // overall loudness (0–1)
 export const SOUND_FADE_SECONDS = 1.5;
 

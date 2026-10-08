@@ -13,7 +13,13 @@ const spreadDirectionsOverSphere = (count, turnOffset) => {
     const height = 1 - ((pointIndex + 0.5) / count) * 2; // from top (1) to bottom (-1)
     const radiusAtHeight = Math.sqrt(1 - height * height);
     const angle = pointIndex * GOLDEN_ANGLE + turnOffset;
-    directions.push(new THREE.Vector3(Math.cos(angle) * radiusAtHeight, height, Math.sin(angle) * radiusAtHeight));
+    directions.push(
+      new THREE.Vector3(
+        Math.cos(angle) * radiusAtHeight,
+        height,
+        Math.sin(angle) * radiusAtHeight,
+      ),
+    );
   }
   return directions;
 };
@@ -27,7 +33,10 @@ export const createBubbleCloud = (parentGroup) => {
   const bubbles = [];
 
   BUBBLE_SHELLS.forEach((shell, shellIndex) => {
-    const directions = spreadDirectionsOverSphere(shell.bubbleCount, shellIndex * 0.9);
+    const directions = spreadDirectionsOverSphere(
+      shell.bubbleCount,
+      shellIndex * 0.9,
+    );
     directions.forEach((direction, bubbleIndex) => {
       const material = createGlassMaterial({
         bodyColor: readColorToken("--bubble-body"),
@@ -42,6 +51,7 @@ export const createBubbleCloud = (parentGroup) => {
         startDelay: shell.startDelay,
         sizeShare: 0.85 + ((bubbleIndex * 7 + shellIndex * 3) % 5) * 0.06, // a little size variety
         bobOffset: Math.random() * Math.PI * 2, // so they don't all bob in sync
+        isOut: false, // true once the bubble has broken through the core's surface
       };
       parentGroup.add(bubble);
       bubbles.push(bubble);
@@ -49,32 +59,70 @@ export const createBubbleCloud = (parentGroup) => {
   });
 
   // breathFullness: 0 = lungs empty, 1 = lungs full
+  // Returns the directions of bubbles that just left the core and that just came home,
+  // so other effects (the splashes) can react to them.
   const update = (breathFullness, sceneSeconds, sizes, allowBobbing) => {
     const homeDistance = sizes.coreRadius * 0.4; // tucked inside the core
+    const leftThisFrame = [];
+    const landedThisFrame = [];
 
     bubbles.forEach((bubble) => {
-      const { direction, distanceShare, startDelay, sizeShare, bobOffset } = bubble.userData;
+      const { direction, distanceShare, startDelay, sizeShare, bobOffset } =
+        bubble.userData;
 
       // Each shell starts a bit later than the one inside it, then catches up
-      const ownProgress = smoothInOut(THREE.MathUtils.clamp((breathFullness - startDelay) / (1 - startDelay), 0, 1));
+      const ownProgress = smoothInOut(
+        THREE.MathUtils.clamp(
+          (breathFullness - startDelay) / (1 - startDelay),
+          0,
+          1,
+        ),
+      );
 
       const farthestDistance = sizes.cloudRadius * distanceShare;
-      const bob = allowBobbing ? Math.sin(sceneSeconds * 1.1 + bobOffset) * sizes.coreRadius * 0.05 * ownProgress : 0;
-      const distance = homeDistance + (farthestDistance - homeDistance) * ownProgress + bob;
+      const bob = allowBobbing
+        ? Math.sin(sceneSeconds * 1.1 + bobOffset) *
+          sizes.coreRadius *
+          0.05 *
+          ownProgress
+        : 0;
+      const distance =
+        homeDistance + (farthestDistance - homeDistance) * ownProgress + bob;
       bubble.position.copy(direction).multiplyScalar(distance);
 
       // Grows on the way out (the original went from 30% to 150%)
-      bubble.scale.setScalar(sizes.cloudRadius * BUBBLE_SIZE_SHARE * sizeShare * (0.3 + ownProgress * 0.7));
+      bubble.scale.setScalar(
+        sizes.cloudRadius *
+          BUBBLE_SIZE_SHARE *
+          sizeShare *
+          (0.3 + ownProgress * 0.7),
+      );
 
       // Invisible while tucked inside the core, fully visible once out
-      bubble.material.uniforms.opacity.value = THREE.MathUtils.clamp((ownProgress - 0.05) * 3, 0, 1);
+      bubble.material.uniforms.opacity.value = THREE.MathUtils.clamp(
+        (ownProgress - 0.05) * 3,
+        0,
+        1,
+      );
       bubble.visible = ownProgress > 0.02;
+
+      // Did it just break out of the core, or just get back in?
+      if (!bubble.userData.isOut && ownProgress > 0.08) {
+        bubble.userData.isOut = true;
+        leftThisFrame.push(direction);
+      } else if (bubble.userData.isOut && ownProgress < 0.04) {
+        bubble.userData.isOut = false;
+        landedThisFrame.push(direction);
+      }
     });
+
+    return { leftThisFrame, landedThisFrame };
   };
 
   const applyColors = () => {
     bubbles.forEach((bubble) => {
-      bubble.material.uniforms.bodyColor.value = readColorToken("--bubble-body");
+      bubble.material.uniforms.bodyColor.value =
+        readColorToken("--bubble-body");
       bubble.material.uniforms.rimColor.value = readColorToken("--bubble-rim");
     });
   };

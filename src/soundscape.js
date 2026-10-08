@@ -5,9 +5,9 @@ import { SOUND_VOLUME, SOUND_FADE_SECONDS } from "./settings.js";
 // A low-pass filter opens as the lungs fill, so the sound breathes with you.
 export const createSoundscapePlayer = () => {
   let audioContext = null; // created on the first click (browsers only allow sound after a click)
-  let currentVoice = null; // the soundscape playing now: { output, filter, oscillators }
+  let currentVoice = null; // the sound playing now: { output, filter, oscillators }
 
-  const createVoice = (soundscape) => {
+  const createVoice = (notes) => {
     const output = audioContext.createGain();
     output.gain.value = 0;
 
@@ -19,7 +19,7 @@ export const createSoundscapePlayer = () => {
     output.connect(audioContext.destination);
 
     const oscillators = [];
-    soundscape.notes.forEach((frequency, noteIndex) => {
+    notes.forEach((frequency, noteIndex) => {
       [-4, 4].forEach((detuneCents) => {
         const oscillator = audioContext.createOscillator();
         oscillator.type = noteIndex === 0 ? "triangle" : "sine"; // a slightly richer bass note
@@ -42,20 +42,25 @@ export const createSoundscapePlayer = () => {
     voice.output.gain.cancelScheduledValues(now);
     voice.output.gain.setValueAtTime(voice.output.gain.value, now);
     voice.output.gain.linearRampToValueAtTime(0, now + SOUND_FADE_SECONDS);
-    voice.oscillators.forEach((oscillator) => oscillator.stop(now + SOUND_FADE_SECONDS + 0.1));
+    voice.oscillators.forEach((oscillator) =>
+      oscillator.stop(now + SOUND_FADE_SECONDS + 0.1),
+    );
   };
 
   return {
-    // Start a soundscape. If one is already playing, the two cross-fade.
-    play(soundscape) {
+    // Start the sound (fading in). If it's already playing, the old and new cross-fade.
+    play(notes) {
       audioContext ??= new (window.AudioContext || window.webkitAudioContext)();
       audioContext.resume();
       if (currentVoice) fadeOutAndStop(currentVoice);
 
-      currentVoice = createVoice(soundscape);
+      currentVoice = createVoice(notes);
       const now = audioContext.currentTime;
       currentVoice.output.gain.setValueAtTime(0, now);
-      currentVoice.output.gain.linearRampToValueAtTime(SOUND_VOLUME, now + SOUND_FADE_SECONDS);
+      currentVoice.output.gain.linearRampToValueAtTime(
+        SOUND_VOLUME,
+        now + SOUND_FADE_SECONDS,
+      );
     },
 
     stop() {
@@ -67,7 +72,11 @@ export const createSoundscapePlayer = () => {
     // Called every frame: brighter sound as the lungs fill
     followBreath(fullness) {
       if (!currentVoice) return;
-      currentVoice.filter.frequency.setTargetAtTime(380 + fullness * 1400, audioContext.currentTime, 0.15);
+      currentVoice.filter.frequency.setTargetAtTime(
+        380 + fullness * 1400,
+        audioContext.currentTime,
+        0.15,
+      );
     },
   };
 };

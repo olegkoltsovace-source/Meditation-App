@@ -2,9 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>Bubble Breath</title>
-    <meta name="description" content="A 3D breathing guide: bubbles fly out as you breathe in and return as you breathe out." />
+    <meta
+      name="description"
+      content="A 3D breathing guide: bubbles fly out as you breathe in and return as you breathe out."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -19,33 +25,30 @@
     <!-- Everything on top of the scene -->
     <div class="overlay">
       <header class="top-bar">
-        <span class="app-name">Bubble Breath</span>
         <span class="session-stats" id="sessionStats">0 breaths · 0:00</span>
       </header>
 
       <main class="center">
-        <div class="controls">
-          <button class="control" id="previousSoundButton" type="button" aria-label="Previous soundscape">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6v12L2.5 12zM21 6v12l-8.5-6z" /></svg>
-          </button>
-          <button class="control play" id="playButton" type="button" aria-label="Start breathing">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="playIconPath" d="M7 4.5v15l12-7.5z" /></svg>
-          </button>
-          <button class="control" id="nextSoundButton" type="button" aria-label="Next soundscape">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6v12l8.5-6zM3 6v12l8.5-6z" /></svg>
-          </button>
-        </div>
+        <button
+          class="play-button"
+          id="playButton"
+          type="button"
+          aria-label="Start breathing"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path id="playIconPath" d="M7 4.5v15l12-7.5z" />
+          </svg>
+        </button>
 
         <div class="breath-guide">
-          <div class="breath-word" id="breathWord">Press play and breathe along</div>
-          <div class="breath-detail" id="breathDetail">Soundscape: Lagoon</div>
+          <div class="breath-word" id="breathWord">
+            Press play and breathe along
+          </div>
+          <div class="breath-detail" id="breathDetail">
+            4 seconds in · 4 seconds out
+          </div>
         </div>
       </main>
-
-      <footer class="bottom-bar">
-        <nav class="patterns" role="radiogroup" aria-label="Breathing pattern" id="patternPicker"></nav>
-        <p class="hint">Drag to turn the scene</p>
-      </footer>
     </div>
 
     <script type="module" src="/src/main.js"></script>
